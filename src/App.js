@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 
 // ── INITIAL PRODUCTS DATA ──────────────────────────────────────────────────
 const INITIAL_PRODUCTS = [
