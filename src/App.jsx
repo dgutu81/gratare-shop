@@ -1,5 +1,9 @@
 import { useState } from "react";
 
+// ── ADMIN CREDENTIALS (schimbă aici parola și username-ul) ─────────────────
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "Qpmz1092%";
+
 // ── INITIAL PRODUCTS DATA ──────────────────────────────────────────────────
 const INITIAL_PRODUCTS = [
   {
@@ -539,6 +543,27 @@ const css = `
   .promo-item { display: flex; align-items: center; gap: 10px; color: var(--cream); font-size: 14px; }
   .promo-icon { color: var(--glow); font-size: 22px; }
   
+  /* ADMIN LOGIN */
+  .admin-login {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 1; padding: 40px 24px;
+  }
+  .login-box {
+    background: #fff; border-radius: 14px; padding: 36px;
+    width: min(380px, 100%); border: 1px solid #ede4d8;
+    box-shadow: 0 8px 32px #0000001a;
+  }
+  .login-box h2 {
+    font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+    letter-spacing: 2px; margin-bottom: 6px; color: var(--char);
+  }
+  .login-box p { font-size: 13px; color: var(--smoke); margin-bottom: 24px; }
+  .login-error {
+    background: #fff0ee; border: 1.5px solid var(--ember);
+    color: var(--ember); padding: 10px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; margin-bottom: 16px;
+  }
+
   /* FOOTER */
   .footer {
     background: var(--char); color: #8a7a6a;
@@ -580,6 +605,35 @@ export default function App() {
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [adminAuth, setAdminAuth] = useState(false);
+  const [loginData, setLoginData] = useState({ user: "", pass: "" });
+  const [loginError, setLoginError] = useState("");
+  const [logoClicks, setLogoClicks] = useState(0);
+
+  const handleLogoClick = () => {
+    const next = logoClicks + 1;
+    setLogoClicks(next);
+    if (next >= 5) {
+      setAdminOpen(true);
+      setLogoClicks(0);
+    }
+  };
+
+  const handleLogin = () => {
+    if (loginData.user === ADMIN_USER && loginData.pass === ADMIN_PASS) {
+      setAdminAuth(true);
+      setLoginError("");
+      setLoginData({ user: "", pass: "" });
+    } else {
+      setLoginError("Username sau parolă incorecte!");
+    }
+  };
+
+  const handleAdminClose = () => {
+    setAdminOpen(false);
+    setAdminAuth(false);
+    setLoginError("");
+  };
   const [orderStep, setOrderStep] = useState("cart"); // cart | form | success
   const [toast, setToast] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -653,14 +707,11 @@ export default function App() {
       {/* HEADER */}
       <header className="header">
         <div className="header-inner">
-          <div className="logo" onClick={() => setAdminOpen(false)}>
+          <div className="logo" onClick={handleLogoClick} title="">
             <Icons.Flame />
             FLACĂRA<span className="logo-fire">GRĂ</span>TAR
           </div>
           <div className="header-actions">
-            <button className="btn btn-ghost btn-sm" onClick={() => setAdminOpen(true)}>
-              <Icons.Admin /> Admin
-            </button>
             <button className="cart-btn" onClick={() => { setCartOpen(true); setOrderStep("cart"); }}>
               <Icons.Cart />
               Coș
@@ -897,33 +948,66 @@ export default function App() {
         <div className="admin-overlay">
           <div className="admin-header">
             <div className="admin-title"><Icons.Admin /> Panou de administrare</div>
-            <button className="close-btn" onClick={() => setAdminOpen(false)}><Icons.Close /></button>
+            <button className="close-btn" onClick={handleAdminClose}><Icons.Close /></button>
           </div>
-          <div className="admin-body">
-            <div className="admin-toolbar">
-              <div>
-                <div style={{ fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: 2 }}>Gestionare produse</div>
-                <div style={{ fontSize: 14, color: "var(--smoke)" }}>{products.length} produse active</div>
-              </div>
-              <button className="btn btn-ember" onClick={openAdd}><Icons.Plus /> Adaugă produs</button>
-            </div>
-            <div className="admin-products-list">
-              {products.map(p => (
-                <div className="admin-product-row" key={p.id}>
-                  <img className="admin-row-img" src={p.image} alt={p.name} />
-                  <div className="admin-row-info">
-                    <div className="admin-row-name">{p.name}</div>
-                    <div className="admin-row-meta">{p.category} · Stoc: {p.stock} buc. {p.badge && `· ${p.badge}`}</div>
-                  </div>
-                  <div className="admin-row-price">{p.price.toLocaleString()} lei</div>
-                  <div className="admin-row-actions">
-                    <button className="icon-btn" onClick={() => openEdit(p)} title="Editează"><Icons.Edit /></button>
-                    <button className="icon-btn danger" onClick={() => deleteProduct(p.id)} title="Șterge"><Icons.Delete /></button>
-                  </div>
+
+          {!adminAuth ? (
+            <div className="admin-login">
+              <div className="login-box">
+                <h2>🔐 Acces Admin</h2>
+                <p>Introduceți credențialele pentru a accesa panoul de administrare.</p>
+                {loginError && <div className="login-error">⚠ {loginError}</div>}
+                <div className="form-group">
+                  <label>Username</label>
+                  <input
+                    value={loginData.user}
+                    onChange={e => setLoginData({ ...loginData, user: e.target.value })}
+                    placeholder="admin"
+                    onKeyDown={e => e.key === "Enter" && handleLogin()}
+                  />
                 </div>
-              ))}
+                <div className="form-group">
+                  <label>Parolă</label>
+                  <input
+                    type="password"
+                    value={loginData.pass}
+                    onChange={e => setLoginData({ ...loginData, pass: e.target.value })}
+                    placeholder="••••••••"
+                    onKeyDown={e => e.key === "Enter" && handleLogin()}
+                  />
+                </div>
+                <button className="btn btn-ember" style={{ width: "100%", marginTop: 8 }} onClick={handleLogin}>
+                  Intră în Admin
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="admin-body">
+              <div className="admin-toolbar">
+                <div>
+                  <div style={{ fontFamily: "'Bebas Neue'", fontSize: 28, letterSpacing: 2 }}>Gestionare produse</div>
+                  <div style={{ fontSize: 14, color: "var(--smoke)" }}>{products.length} produse active</div>
+                </div>
+                <button className="btn btn-ember" onClick={openAdd}><Icons.Plus /> Adaugă produs</button>
+              </div>
+              <div className="admin-products-list">
+                {products.map(p => (
+                  <div className="admin-product-row" key={p.id}>
+                    <img className="admin-row-img" src={p.image} alt={p.name} />
+                    <div className="admin-row-info">
+                      <div className="admin-row-name">{p.name}</div>
+                      <div className="admin-row-meta">{p.category} · Stoc: {p.stock} buc. {p.badge && `· ${p.badge}`}</div>
+                    </div>
+                    <div className="admin-row-price">{p.price.toLocaleString()} lei</div>
+                    <div className="admin-row-actions">
+                      <button className="icon-btn" onClick={() => openEdit(p)} title="Editează"><Icons.Edit /></button>
+                      <button className="icon-btn danger" onClick={() => deleteProduct(p.id)} title="Șterge"><Icons.Delete /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1029,4 +1113,3 @@ function ProductForm({ initial, onSave, onCancel }) {
     </>
   );
 }
-
